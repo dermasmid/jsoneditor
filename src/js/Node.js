@@ -3709,6 +3709,37 @@ export class Node {
     const node = this
     let items = []
 
+    items.push({
+      text: 'Copy path',
+      title: 'Copy path to clipboard',
+      className: 'jsoneditor-duplicate',
+      click: function () {
+        const pathAsArray = node.getPath();
+        const pathAsString = pathAsArray.map(i => {
+          if (typeof i === 'string') {
+            return `["${i}"]`
+          } else {
+            return `[${i}]`
+          }
+        }).join('')
+        navigator.clipboard.writeText(pathAsString).then(() => {
+          alert('Copied path.')
+        })
+      },
+    })
+
+    items.push({
+      text: 'Copy value',
+      title: 'Copy value to clipboard',
+      className: 'jsoneditor-duplicate',
+      click: function () {
+        navigator.clipboard.writeText(JSON.stringify(node.getValue())).then(() => {
+          alert('Copied value.')
+        })
+      },
+    })
+
+
     if (this.editable.value) {
       items.push({
         text: translate('type'),
