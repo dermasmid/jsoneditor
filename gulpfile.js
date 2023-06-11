@@ -6,7 +6,7 @@ const format = require('date-format')
 const concatCss = require('gulp-concat-css')
 const minifyCSS = require('gulp-clean-css')
 const sass = require('gulp-sass')(require('sass'))
-const mkdirp = require('mkdirp')
+const { mkdirp } = require('mkdirp')
 const webpack = require('webpack')
 const uglify = require('uglify-js')
 const btoa = require('btoa')
@@ -102,7 +102,7 @@ const compilerMinimalist = webpack({
 
 function minify (name) {
   const code = String(fs.readFileSync(DIST + '/' + name + '.js'))
-  const result = uglify.minify(code, {
+  const result = uglify.minify({ [name + '.js']: code }, {
     sourceMap: {
       url: name + '.map'
     },

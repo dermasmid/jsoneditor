@@ -1,6 +1,6 @@
 'use strict'
 
-import jsonrepair from 'jsonrepair'
+import { jsonrepair } from 'jsonrepair'
 import ace from './ace'
 import { DEFAULT_MODAL_ANCHOR } from './constants'
 import { ErrorTable } from './ErrorTable'
@@ -11,6 +11,7 @@ import { ModeSwitcher } from './ModeSwitcher'
 import { showSortModal } from './showSortModal'
 import { showTransformModal } from './showTransformModal'
 import { tryRequireThemeJsonEditor } from './tryRequireThemeJsonEditor'
+import { SchemaTextCompleter } from './SchemaTextCompleter'
 import {
   addClassName,
   debounce,
@@ -49,6 +50,9 @@ textmode.create = function (container, options = {}) {
   options.enableTransform = options.enableTransform !== false
   options.createQuery = options.createQuery || createQuery
   options.executeQuery = options.executeQuery || executeQuery
+  options.showErrorTable = options.showErrorTable !== undefined
+    ? options.showErrorTable
+    : ['text', 'preview']
 
   this.options = options
 
@@ -325,8 +329,12 @@ textmode.create = function (container, options = {}) {
 
   this._updateHistoryButtons()
 
+  const errorTableVisible = Array.isArray(this.options.showErrorTable)
+    ? this.options.showErrorTable.includes(this.mode)
+    : this.options.showErrorTable === true
+
   this.errorTable = new ErrorTable({
-    errorTableVisible: this.mode === 'text',
+    errorTableVisible,
     onToggleVisibility: function () {
       me._validateAndCatch()
     },
@@ -402,6 +410,20 @@ textmode.create = function (container, options = {}) {
   }
 
   this.setSchema(this.options.schema, this.options.schemaRefs)
+}
+
+textmode._onSchemaChange = function (schema, schemaRefs) {
+  if (!this.aceEditor) {
+    return
+  }
+
+  if (this.options.allowSchemaSuggestions && schema) {
+    this.aceEditor.setOption('enableBasicAutocompletion', [new SchemaTextCompleter(schema, schemaRefs)])
+    this.aceEditor.setOption('enableLiveAutocompletion', true)
+  } else {
+    this.aceEditor.setOption('enableBasicAutocompletion', undefined)
+    this.aceEditor.setOption('enableLiveAutocompletion', false)
+  }
 }
 
 /**
@@ -602,9 +624,9 @@ textmode._updateCursorInfo = function () {
       }
 
       me.cursorInfo = {
-        line: line,
+        line,
         column: col,
-        count: count
+        count
       }
 
       if (me.options.statusBar) {
@@ -620,9 +642,9 @@ textmode._updateCursorInfo = function () {
     count = selectedText.length
 
     me.cursorInfo = {
-      line: line,
+      line,
       column: col,
-      count: count
+      count
     }
 
     if (this.options.statusBar) {
@@ -904,7 +926,7 @@ textmode.validate = function () {
       parseErrors = [{
         type: 'error',
         message: err.message.replace(/\n/g, '<br>'),
-        line: line
+        line
       }]
     }
 
@@ -1090,12 +1112,12 @@ export const textModeMixins = [
     mode: 'text',
     mixin: textmode,
     data: 'text',
-    load: load
+    load
   },
   {
     mode: 'code',
     mixin: textmode,
     data: 'text',
-    load: load
+    load
   }
 ]

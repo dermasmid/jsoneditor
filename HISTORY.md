@@ -3,6 +3,64 @@
 https://github.com/josdejong/jsoneditor
 
 
+## 2023-05-12, version 9.10.2
+
+- Fix option `showErrorTable` (see #1515): 
+  - a console warning was logged when using the option `showErrorTable` 
+  - `showErrorTable: false` was not working
+  - `showErrorTable` was not working for `preview` mode
+- Upgraded to the latest version of `ace` and `jsonrepair`.
+
+
+## 2023-05-12, version 9.10.1
+
+- Fix #1515: a console warning is logged when using the option `showErrorTable`.
+
+
+## 2023-02-20, version 9.10.0
+
+- Implement option `showErrorTable` to customize in which modes the error table
+  shows up initially (#1497). Thanks @magedhennawy.
+- Upgrade to the latest version of Ace editor, `v1.15.2`.
+- Upgrade to the latest version of jsonrepair, `v3.0.2`.
+- Fix #1208: source map issue "Could not load source file "0" in source map" 
+  (#1499). Thanks @joshkel.
+
+
+## 2022-09-20, version 9.9.2
+
+- Fix #1470: update the code of Selectr from `2.4.0` to `2.4.13`.
+
+
+## 2022-09-19, version 9.9.1
+
+- Upgrade to the latest version of Ace editor, `v1.10.1`.
+
+
+## 2022-06-13, version 9.9.0
+
+- Implemented #968: support for auto-completion based on JSON Schema (#1435).
+  Thanks @meirotstein.
+- Upgrade to the latest version of Ace editor, `v1.6.0`.
+
+
+## 2022-05-31, version 9.8.0
+
+- Implemented method `editor.expand({ path, isExpand, recursive })` and callback 
+  `onExpand({ path, isExpand, recursive })`. Thanks @himanshu520.
+- Upgrade to the latest version of Ace editor, `v1.5.3`.
+
+
+## 2022-03-15, version 9.7.4
+
+- Fix #1421: fix `onBlur` event not firing when focus goes to an `iframe`.
+
+
+## 2022-03-04, version 9.7.3
+
+- Fix #1422: fix `setSchema` not working.
+
+
 ## 2022-02-09, version 9.7.2
 
 - Fix #1419: blurry text preview query on Chrome.
