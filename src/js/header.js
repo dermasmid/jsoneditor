@@ -6,7 +6,7 @@
  * It has various modes such as a tree editor, a code editor, and a plain text
  * editor.
  *
- * Supported browsers: Chrome, Firefox, Safari, Opera, Internet Explorer 8+
+ * Supported browsers: Chrome, Firefox, Safari, Edge
  *
  * @license
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -21,7 +21,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  *
- * Copyright (c) 2011-2023 Jos de Jong, http://jsoneditoronline.org
+ * Copyright (c) 2011-2026 Jos de Jong, http://jsoneditoronline.org
  *
  * @author  Jos de Jong, <wjosdejong@gmail.com>
  * @version @@version

@@ -1021,6 +1021,10 @@ export function get (object, path) {
  * @param {Array} existingPropNames    Array with existing prop names
  */
 export function findUniqueName (name, existingPropNames) {
+  if (existingPropNames.indexOf(name) === -1) {
+    return name
+  }
+
   const strippedName = name.replace(/ \(copy( \d+)?\)$/, '')
   let validName = strippedName
   let i = 1
@@ -1131,9 +1135,19 @@ export function parseString (str) {
     return false
   }
 
+  const containsLeadingZero = /^0\d+$/
+  const startsWithZeroPrefix = /^0[xbo]/i // hex, binary, octal numbers
+  if (containsLeadingZero.test(str) || startsWithZeroPrefix.test(str)) {
+    // treat '001', '0x1A', '0b1101', and '0o3700' as a string
+    return str
+  }
+
   const num = Number(str) // will nicely fail with '123ab'
   const numFloat = parseFloat(str) // will nicely fail with '  '
-  if (!isNaN(num) && !isNaN(numFloat)) {
+  const isFiniteNumber = !isNaN(num) && !isNaN(numFloat) && isFinite(num)
+  const isInSafeRange = num <= Number.MAX_SAFE_INTEGER && num >= Number.MIN_SAFE_INTEGER
+  const isInteger = /^\d+$/.test(str)
+  if (isFiniteNumber && (isInSafeRange || !isInteger)) {
     return num
   }
 
@@ -1224,18 +1238,21 @@ export function contains (array, item) {
  * @param {Array} prevErr previous validation errors
  */
 export function isValidationErrorChanged (currErr, prevErr) {
-  if (!prevErr && !currErr) { return false }
-  if ((prevErr && !currErr) || (!prevErr && currErr)) { return true }
-  if (prevErr.length !== currErr.length) { return true }
+  if (!currErr && !prevErr) {
+    return false
+  }
+  if (!Array.isArray(currErr) || !Array.isArray(prevErr) || prevErr.length !== currErr.length) {
+    return true
+  }
 
-  for (let i = 0; i < currErr.length; ++i) {
-    let pErr
-    if (currErr[i].type === 'error') {
-      pErr = prevErr.find(p => p.line === currErr[i].line)
-    } else {
-      pErr = prevErr.find(p => p.dataPath === currErr[i].dataPath && p.schemaPath === currErr[i].schemaPath)
-    }
-    if (!pErr) {
+  for (let i = 0; i < currErr.length; i++) {
+    const currItem = currErr[i]
+    const prevItem = prevErr[i]
+
+    if (
+      currItem.type !== prevItem.type ||
+      JSON.stringify(currItem.error) !== JSON.stringify(prevItem.error)
+    ) {
       return true
     }
   }
@@ -1246,7 +1263,7 @@ export function isValidationErrorChanged (currErr, prevErr) {
 /**
  * Uniquely merge array of elements
  * @param {Array<string|number>} inputArray1
- * @param {Array<string|number?} inputArray2
+ * @param {Array<string|number>} inputArray2
  * @returns {Array<string|number>} an array with unique merged elements
  */
 export function uniqueMergeArrays (inputArray1, inputArray2) {

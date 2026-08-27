@@ -86,30 +86,31 @@ describe('util', () => {
   })
 
   describe('isValidationErrorChanged', () => {
-    const err1 = { keyword: 'enum', dataPath: '.gender', schemaPath: '#/properties/gender/enum', params: { allowedValues: ['male', 'female'] }, message: 'should be equal to one of: "male", "female"', schema: ['male', 'female'], parentSchema: { title: 'Gender', enum: ['male', 'female'] }, data: null, type: 'validation' }
-    const err2 = { keyword: 'type', dataPath: '.age', schemaPath: '#/properties/age/type', params: { type: 'integer' }, message: 'should be integer', schema: 'integer', parentSchema: { description: 'Age in years', type: 'integer', minimum: 0, examples: [28, 32] }, data: '28', type: 'validation' }
-    const err3 = { dataPath: '.gender', message: 'Member must be an object with properties "name" and "age"' }
+    const err1 = { type: 'validation', error: { keyword: 'enum', dataPath: '.gender', schemaPath: '#/properties/gender/enum', params: { allowedValues: ['male', 'female'] }, message: 'should be equal to one of: "male", "female"', schema: ['male', 'female'], parentSchema: { title: 'Gender', enum: ['male', 'female'] }, data: null, type: 'validation' } }
+    const err2 = { type: 'validation', error: { keyword: 'type', dataPath: '.age', schemaPath: '#/properties/age/type', params: { type: 'integer' }, message: 'should be integer', schema: 'integer', parentSchema: { description: 'Age in years', type: 'integer', minimum: 0, examples: [28, 32] }, data: '28', type: 'validation' } }
+    const err3 = { type: 'validation', error: { dataPath: '.gender', message: 'Member must be an object with properties "name" and "age"' } }
+    const err3b = { type: 'validation', error: { dataPath: '.gender', message: 'Must be an object' } }
 
-    it('empty value for both current and previoues error should return false', () => {
+    it('empty value for both current and previous error should return false', () => {
       assert.strictEqual(isValidationErrorChanged(), false)
     })
 
-    it('empty value for one of current and previoues error should return true', () => {
+    it('empty value for one of current and previous error should return true', () => {
       assert.strictEqual(isValidationErrorChanged([err1]), true)
       assert.strictEqual(isValidationErrorChanged(undefined, [err1]), true)
     })
 
-    it('different length of current and previoues errors should return true', () => {
+    it('different length of current and previous errors should return true', () => {
       assert.strictEqual(isValidationErrorChanged([err1], []), true)
       assert.strictEqual(isValidationErrorChanged([err1], [err1, err2]), true)
     })
 
-    it('same values for current and previoues errors should return false', () => {
-      assert.strictEqual(isValidationErrorChanged([err1, err2, err3], [err2, err3, err1]), false)
+    it('different values for current and previous errors should return true', () => {
+      assert.strictEqual(isValidationErrorChanged([err1, err2], [err3, err1]), true)
     })
 
-    it('different values for current and previoues errors should return true', () => {
-      assert.strictEqual(isValidationErrorChanged([err1, err2], [err3, err1]), true)
+    it('different message', () => {
+      assert.strictEqual(isValidationErrorChanged([err3], [err3b]), true)
     })
   })
 
@@ -304,21 +305,42 @@ describe('util', () => {
     })
   })
 
-  it('should parse a string', () => {
-    assert.strictEqual(parseString('foo'), 'foo')
-    assert.strictEqual(parseString('234foo'), '234foo')
-    assert.strictEqual(parseString('  234'), 234)
-    assert.strictEqual(parseString('234  '), 234)
-    assert.strictEqual(parseString('2.3'), 2.3)
-    assert.strictEqual(parseString('null'), null)
-    assert.strictEqual(parseString('true'), true)
-    assert.strictEqual(parseString('false'), false)
-    assert.strictEqual(parseString('+1'), 1)
-    assert.strictEqual(parseString(' '), ' ')
-    assert.strictEqual(parseString(''), '')
-    assert.strictEqual(parseString('"foo"'), '"foo"')
-    assert.strictEqual(parseString('"2"'), '"2"')
-    assert.strictEqual(parseString('\'foo\''), '\'foo\'')
+  describe('parseString', () => {
+    it('should parse a string', () => {
+      assert.strictEqual(parseString('foo'), 'foo')
+      assert.strictEqual(parseString('234foo'), '234foo')
+      assert.strictEqual(parseString('  234'), 234)
+      assert.strictEqual(parseString('234  '), 234)
+      assert.strictEqual(parseString('2.3'), 2.3)
+      assert.strictEqual(parseString('null'), null)
+      assert.strictEqual(parseString('true'), true)
+      assert.strictEqual(parseString('false'), false)
+      assert.strictEqual(parseString('+1'), 1)
+      assert.strictEqual(parseString('01'), '01')
+      assert.strictEqual(parseString('001'), '001')
+      assert.strictEqual(parseString('0.3'), 0.3)
+      assert.strictEqual(parseString('0e3'), 0)
+      assert.strictEqual(parseString(' '), ' ')
+      assert.strictEqual(parseString(''), '')
+      assert.strictEqual(parseString('"foo"'), '"foo"')
+      assert.strictEqual(parseString('"2"'), '"2"')
+      assert.strictEqual(parseString('\'foo\''), '\'foo\'')
+      assert.strictEqual(parseString('0x1A'), '0x1A')
+      assert.strictEqual(parseString('0x1F'), '0x1F')
+      assert.strictEqual(parseString('0x1a'), '0x1a')
+      assert.strictEqual(parseString('0b1101'), '0b1101')
+      assert.strictEqual(parseString('0o3700'), '0o3700')
+      assert.strictEqual(parseString('0X1a'), '0X1a')
+      assert.strictEqual(parseString('0B1101'), '0B1101')
+      assert.strictEqual(parseString('0O3700'), '0O3700')
+      assert.strictEqual(parseString('7405242042266046865'), '7405242042266046865')
+      assert.strictEqual(parseString('9007199254740991'), 9007199254740991)
+      assert.strictEqual(parseString('9007199254740991'), 9007199254740991)
+      assert.strictEqual(parseString('-9007199254740991'), -9007199254740991)
+      assert.strictEqual(parseString('1e25'), 1e25)
+      assert.strictEqual(parseString('1e308'), 1e308)
+      assert.strictEqual(parseString('1e309'), '1e309')
+    })
   })
 
   it('should find a unique name', () => {
@@ -364,6 +386,11 @@ describe('util', () => {
       'b (copy 2)',
       'c'
     ]), 'b (copy 3)')
+
+    assert.strictEqual(findUniqueName('b (copy)', [
+      'a',
+      'c'
+    ]), 'b (copy)')
   })
 
   it('should format a document size in a human readable way', () => {

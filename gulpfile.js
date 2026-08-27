@@ -9,7 +9,6 @@ const sass = require('gulp-sass')(require('sass'))
 const { mkdirp } = require('mkdirp')
 const webpack = require('webpack')
 const uglify = require('uglify-js')
-const btoa = require('btoa')
 
 const NAME = 'jsoneditor'
 const NAME_MINIMALIST = 'jsoneditor-minimalist'
@@ -39,7 +38,9 @@ const webpackConfigModule = {
   rules: [
     {
       test: /\.m?js$/,
-      exclude: /node_modules/,
+      // keep src/js/generated out of Babel: it holds the Ace worker as a template
+      // literal, and transpiling it would collapse it into one unreadable line
+      exclude: /node_modules|[/\\]src[/\\]js[/\\]generated[/\\]/,
       use: {
         loader: 'babel-loader'
       }
@@ -89,7 +90,7 @@ const compilerMinimalist = webpack({
   plugins: [
     bannerPlugin,
     new webpack.IgnorePlugin({ resourceRegExp: /^ace-builds/ }),
-    new webpack.IgnorePlugin({ resourceRegExp: /worker-json-data-url/ }),
+    new webpack.IgnorePlugin({ resourceRegExp: /worker-json-source/ }),
     new webpack.IgnorePlugin({ resourceRegExp: /^ajv/ }),
     new webpack.IgnorePlugin({ resourceRegExp: /^vanilla-picker/ })
   ],
@@ -134,15 +135,21 @@ gulp.task('mkdir', function (done) {
   done()
 })
 
-// Create an embedded version of the json worker code: a data url
+// Create an embedded version of the json worker code: plain, readable source.
+// It is deliberately NOT a base64 data url: the Chrome Web Store rejects packages
+// that contain base64 encoded JavaScript ("obfuscated code").
 gulp.task('embed-json-worker', function (done) {
-  const workerBundleFile = './node_modules/ace-builds/src-noconflict/worker-json.js'
-  const workerEmbeddedFile = './src/js/generated/worker-json-data-url.js'
+  const workerBundleFile = require.resolve('ace-builds/src-noconflict/worker-json.js')
+  const workerEmbeddedFile = './src/js/generated/worker-json-source.js'
   const workerScript = String(fs.readFileSync(workerBundleFile))
 
-  const workerDataUrl = 'data:application/javascript;base64,' + btoa(workerScript)
+  // escape only what a template literal would otherwise swallow
+  const escaped = workerScript
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$\{/g, '\\${')
 
-  fs.writeFileSync(workerEmbeddedFile, 'module.exports = \'' + workerDataUrl + '\'\n')
+  fs.writeFileSync(workerEmbeddedFile, 'module.exports = `' + escaped + '`\n')
 
   done()
 })
@@ -241,7 +248,7 @@ gulp.task('default', gulp.series(
     'copy-img',
     'copy-docs',
     'bundle-css',
-    gulp.series('bundle', 'minify'),
-    gulp.series('bundle-minimalist', 'minify-minimalist')
+    'bundle',
+    'bundle-minimalist'
   )
 ))
