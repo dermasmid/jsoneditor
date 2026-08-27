@@ -134,8 +134,6 @@ color: #606060
 .ace-jsoneditor .ace_markup.ace_underline {
 text-decoration: underline
 }
-.ace-jsoneditor .ace_indent-guide {
-background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAE0lEQVQImWP4////f4bLly//BwAmVgd1/w11/gAAAABJRU5ErkJggg==") right repeat-y
 }`
 
   const dom = acequire('../lib/dom')
